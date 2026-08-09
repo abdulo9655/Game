@@ -1,0 +1,1781 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NEON CITY 2099</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#02050a;
+  font-family:Arial,sans-serif;
+  color:white;
+}
+
+/* =========================
+   LOADING
+========================= */
+
+#loading{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(
+      circle at center,
+      #09283a 0%,
+      #02050a 65%
+    );
+  transition:1.2s;
+}
+
+.loadingBox{
+  width:520px;
+  max-width:85%;
+  text-align:center;
+}
+
+.loadingTitle{
+  font-size:clamp(40px,7vw,75px);
+  font-weight:900;
+  letter-spacing:12px;
+  color:#e9fcff;
+  text-shadow:
+    0 0 15px #00eaff,
+    0 0 45px #00eaff,
+    0 0 90px #006dff;
+}
+
+.loadingSub{
+  margin-top:14px;
+  color:#67dff3;
+  letter-spacing:5px;
+  font-size:11px;
+}
+
+.loadingBar{
+  width:100%;
+  height:3px;
+  margin-top:35px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+}
+
+.loadingProgress{
+  height:100%;
+  width:0;
+  background:#00eaff;
+  box-shadow:0 0 20px #00eaff;
+  animation:load 3.5s forwards;
+}
+
+.loadingPercent{
+  margin-top:12px;
+  color:#557783;
+  font-size:11px;
+  letter-spacing:3px;
+}
+
+@keyframes load{
+  0%{width:0}
+  30%{width:30%}
+  60%{width:65%}
+  85%{width:88%}
+  100%{width:100%}
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+#mobile{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px;
+  background:
+    radial-gradient(circle,#123b52,#02050a 70%);
+}
+
+.mobileBox{
+  padding:45px 30px;
+  max-width:520px;
+  border:1px solid rgba(0,225,255,.3);
+  border-radius:28px;
+  background:rgba(3,14,25,.8);
+  backdrop-filter:blur(20px);
+  box-shadow:0 0 80px rgba(0,220,255,.15);
+}
+
+.mobileIcon{
+  font-size:70px;
+  margin-bottom:20px;
+}
+
+.mobileBox h1{
+  letter-spacing:7px;
+  font-size:38px;
+  text-shadow:0 0 25px #00eaff;
+}
+
+.mobileBox p{
+  margin-top:18px;
+  line-height:1.9;
+  color:#91abb7;
+}
+
+@media(max-width:900px){
+  #mobile{
+    display:flex;
+  }
+}
+
+
+/* =========================
+   CITY
+========================= */
+
+#city{
+  position:fixed;
+  inset:0;
+  opacity:0;
+  pointer-events:none;
+  transition:1s;
+  background:
+    linear-gradient(
+      #02050d,
+      #071928 55%,
+      #010306
+    );
+}
+
+#city.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+
+/* =========================
+   SKY
+========================= */
+
+.stars{
+  position:absolute;
+  inset:0;
+  background-image:
+    radial-gradient(circle,#fff 1px,transparent 1px),
+    radial-gradient(circle,#00eaff 1px,transparent 1px),
+    radial-gradient(circle,#c76cff 1px,transparent 1px);
+  background-size:
+    100px 100px,
+    180px 180px,
+    250px 250px;
+  opacity:.55;
+  animation:stars 80s linear infinite;
+}
+
+@keyframes stars{
+  to{
+    transform:translateY(100px);
+  }
+}
+
+.moon{
+  position:absolute;
+  right:9%;
+  top:8%;
+  width:170px;
+  height:170px;
+  border-radius:50%;
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      #fff,
+      #b5e8ff 45%,
+      #31586a
+    );
+  box-shadow:
+    0 0 50px rgba(100,220,255,.5),
+    0 0 120px rgba(0,200,255,.15);
+}
+
+
+/* =========================
+   3D WORLD
+========================= */
+
+.camera{
+  position:absolute;
+  inset:0;
+  perspective:1200px;
+  transition:.15s;
+}
+
+.world{
+  position:absolute;
+  width:1400px;
+  height:950px;
+  left:50%;
+  top:50%;
+  transform:
+    translate(-50%,-45%)
+    rotateX(62deg)
+    translateZ(-180px);
+  transform-style:preserve-3d;
+}
+
+
+/* =========================
+   GROUND
+========================= */
+
+.ground{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0,220,255,.06) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      rgba(0,220,255,.06) 1px,
+      transparent 1px
+    ),
+    #02080d;
+  background-size:50px 50px;
+  box-shadow:
+    inset 0 0 150px rgba(0,180,255,.12);
+}
+
+.road{
+  position:absolute;
+  background:#050b10;
+  box-shadow:inset 0 0 40px #000;
+}
+
+.roadH{
+  left:0;
+  top:410px;
+  width:1400px;
+  height:130px;
+}
+
+.roadV{
+  left:635px;
+  top:0;
+  width:130px;
+  height:950px;
+}
+
+.roadH:after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:63px;
+  width:100%;
+  height:3px;
+  background:#00eaff;
+  box-shadow:0 0 15px #00eaff;
+}
+
+.roadV:after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:63px;
+  width:3px;
+  height:100%;
+  background:#00eaff;
+  box-shadow:0 0 15px #00eaff;
+}
+
+
+/* =========================
+   BUILDINGS
+========================= */
+
+.building{
+  position:absolute;
+  background:
+    linear-gradient(
+      90deg,
+      #06131b,
+      #102d39
+    );
+  border:1px solid rgba(0,220,255,.35);
+  box-shadow:
+    0 0 30px rgba(0,180,255,.08);
+  cursor:pointer;
+  transition:.3s;
+}
+
+.building:hover{
+  filter:brightness(1.5);
+  box-shadow:
+    0 0 55px rgba(0,220,255,.4);
+}
+
+.b1{
+  left:70px;
+  top:60px;
+  width:190px;
+  height:330px;
+}
+
+.b2{
+  left:310px;
+  top:130px;
+  width:160px;
+  height:260px;
+}
+
+.b3{
+  left:880px;
+  top:50px;
+  width:220px;
+  height:390px;
+}
+
+.b4{
+  left:1140px;
+  top:150px;
+  width:160px;
+  height:280px;
+}
+
+.b5{
+  left:80px;
+  top:600px;
+  width:200px;
+  height:300px;
+}
+
+.b6{
+  left:860px;
+  top:570px;
+  width:260px;
+  height:340px;
+}
+
+.b7{
+  left:420px;
+  top:630px;
+  width:140px;
+  height:220px;
+}
+
+.b8{
+  left:690px;
+  top:680px;
+  width:150px;
+  height:230px;
+}
+
+
+/* =========================
+   WINDOWS
+========================= */
+
+.windows{
+  position:absolute;
+  inset:15px;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  grid-auto-rows:20px;
+  gap:12px;
+  overflow:hidden;
+}
+
+.window{
+  background:#00dfff;
+  box-shadow:0 0 10px #00dfff;
+  opacity:.45;
+  animation:blink var(--speed) infinite alternate;
+}
+
+.window:nth-child(4n){
+  background:#bf69ff;
+  box-shadow:0 0 10px #bf69ff;
+}
+
+.window:nth-child(7n){
+  background:#ffd66b;
+  box-shadow:0 0 10px #ffd66b;
+}
+
+@keyframes blink{
+  from{opacity:.12}
+  to{opacity:.9}
+}
+
+
+/* =========================
+   SIGNS
+========================= */
+
+.sign{
+  position:absolute;
+  padding:12px 20px;
+  border:1px solid currentColor;
+  letter-spacing:4px;
+  font-size:12px;
+  text-shadow:0 0 15px currentColor;
+  box-shadow:0 0 25px rgba(0,220,255,.12);
+  animation:flicker 4s infinite;
+}
+
+.sign1{
+  left:130px;
+  top:200px;
+  color:#00eaff;
+}
+
+.sign2{
+  left:920px;
+  top:220px;
+  color:#d26cff;
+}
+
+.sign3{
+  left:920px;
+  top:700px;
+  color:#ffd66b;
+}
+
+@keyframes flicker{
+  0%,90%,100%{opacity:1}
+  92%{opacity:.2}
+  94%{opacity:1}
+}
+
+
+/* =========================
+   FLYING CARS
+========================= */
+
+.flyingCar{
+  position:absolute;
+  width:90px;
+  height:25px;
+  border-radius:20px;
+  background:linear-gradient(90deg,#00bfe8,#e2fbff);
+  box-shadow:0 0 25px #00eaff;
+  z-index:100;
+}
+
+.fly1{
+  top:22%;
+  left:-150px;
+  animation:fly 13s linear infinite;
+}
+
+.fly2{
+  top:38%;
+  left:-200px;
+  transform:scale(.65);
+  animation:fly 19s 4s linear infinite;
+}
+
+@keyframes fly{
+  to{
+    left:110%;
+  }
+}
+
+
+/* =========================
+   ROBOT
+========================= */
+
+.robot{
+  position:absolute;
+  left:-40px;
+  bottom:25px;
+  width:65px;
+  height:135px;
+  z-index:350;
+  transform:scale(.75);
+  transform-origin:bottom center;
+  transition:left 2s cubic-bezier(.7,0,.2,1);
+}
+
+.robotHead{
+  position:absolute;
+  left:13px;
+  top:0;
+  width:39px;
+  height:34px;
+  border:2px solid #00eaff;
+  border-radius:9px;
+  background:linear-gradient(135deg,#d8fbff,#315b69);
+  box-shadow:0 0 20px rgba(0,220,255,.5);
+}
+
+.robotEye{
+  position:absolute;
+  left:8px;
+  right:8px;
+  top:13px;
+  height:5px;
+  background:#00eaff;
+  box-shadow:0 0 15px #00eaff;
+  animation:eye 2s infinite;
+}
+
+@keyframes eye{
+  0%,45%,55%,100%{opacity:1}
+  50%{opacity:.1}
+}
+
+.robotBody{
+  position:absolute;
+  left:8px;
+  top:40px;
+  width:49px;
+  height:50px;
+  border-radius:8px;
+  border:2px solid #00d9ff;
+  background:linear-gradient(90deg,#173744,#8de1ed,#173744);
+}
+
+.robotBody:after{
+  content:"";
+  position:absolute;
+  left:17px;
+  top:18px;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:#00eaff;
+  box-shadow:0 0 20px #00eaff;
+}
+
+.robotArm{
+  position:absolute;
+  top:43px;
+  width:10px;
+  height:48px;
+  border-radius:8px;
+  background:#416b79;
+  border:1px solid #00d9ff;
+  transform-origin:top center;
+}
+
+.leftArm{left:-3px}
+.rightArm{right:-3px}
+
+.robotLeg{
+  position:absolute;
+  top:89px;
+  width:13px;
+  height:43px;
+  border-radius:8px;
+  background:#315866;
+  border:1px solid #00d9ff;
+  transform-origin:top center;
+}
+
+.leftLeg{left:13px}
+.rightLeg{right:13px}
+
+.robot.walking{
+  animation:bob .4s infinite alternate;
+}
+
+.robot.walking .leftLeg{
+  animation:leg1 .35s infinite alternate;
+}
+
+.robot.walking .rightLeg{
+  animation:leg2 .35s infinite alternate;
+}
+
+.robot.walking .leftArm{
+  animation:arm1 .35s infinite alternate;
+}
+
+.robot.walking .rightArm{
+  animation:arm2 .35s infinite alternate;
+}
+
+@keyframes bob{
+  from{transform:scale(.75) translateY(0)}
+  to{transform:scale(.75) translateY(-5px)}
+}
+
+@keyframes leg1{
+  from{transform:rotate(20deg)}
+  to{transform:rotate(-20deg)}
+}
+
+@keyframes leg2{
+  from{transform:rotate(-20deg)}
+  to{transform:rotate(20deg)}
+}
+
+@keyframes arm1{
+  from{transform:rotate(-20deg)}
+  to{transform:rotate(20deg)}
+}
+
+@keyframes arm2{
+  from{transform:rotate(20deg)}
+  to{transform:rotate(-20deg)}
+}
+
+
+/* =========================
+   ELEVATOR
+========================= */
+
+.elevatorArea{
+  position:absolute;
+  left:510px;
+  top:270px;
+  width:300px;
+  height:330px;
+  z-index:300;
+}
+
+.elevator{
+  position:absolute;
+  left:60px;
+  top:20px;
+  width:180px;
+  height:230px;
+  background:#02080d;
+  border:5px solid #17313d;
+  box-shadow:
+    0 0 30px rgba(0,220,255,.25),
+    inset 0 0 40px rgba(0,220,255,.08);
+  overflow:hidden;
+}
+
+.elevatorLight{
+  position:absolute;
+  left:15px;
+  right:15px;
+  top:8px;
+  height:4px;
+  background:#00eaff;
+  box-shadow:0 0 20px #00eaff;
+}
+
+.floor{
+  position:absolute;
+  top:-35px;
+  left:50%;
+  transform:translateX(-50%);
+  color:#00eaff;
+  font-weight:bold;
+  letter-spacing:5px;
+  text-shadow:0 0 15px #00eaff;
+}
+
+.elevatorDoor{
+  position:absolute;
+  top:0;
+  width:50%;
+  height:100%;
+  z-index:5;
+  background:linear-gradient(90deg,#06121a,#183b49,#06121a);
+  border:1px solid rgba(0,220,255,.2);
+  transition:1s cubic-bezier(.7,0,.2,1);
+}
+
+.elevatorDoor.left{
+  left:0;
+}
+
+.elevatorDoor.right{
+  right:0;
+}
+
+.elevator.open .left{
+  transform:translateX(-100%);
+}
+
+.elevator.open .right{
+  transform:translateX(100%);
+}
+
+
+/* =========================
+   RAIN
+========================= */
+
+#rain{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:500;
+}
+
+.drop{
+  position:absolute;
+  top:-100px;
+  width:1px;
+  height:80px;
+  background:linear-gradient(
+    transparent,
+    rgba(100,220,255,.7)
+  );
+  animation:rain linear infinite;
+}
+
+@keyframes rain{
+  to{
+    transform:translate(-120px,110vh);
+  }
+}
+
+
+/* =========================
+   PARTICLES
+========================= */
+
+#particles{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:450;
+}
+
+.particle{
+  position:absolute;
+  width:3px;
+  height:3px;
+  border-radius:50%;
+  background:#8df5ff;
+  box-shadow:0 0 10px #00eaff;
+  animation:particle linear infinite;
+}
+
+@keyframes particle{
+  from{
+    transform:translateY(110vh);
+    opacity:0;
+  }
+  20%{opacity:1}
+  80%{opacity:1}
+  to{
+    transform:translateY(-10vh);
+    opacity:0;
+  }
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+.hud{
+  position:absolute;
+  inset:0;
+  z-index:2000;
+  pointer-events:none;
+}
+
+.top{
+  position:absolute;
+  left:30px;
+  right:30px;
+  top:25px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.logo{
+  font-size:18px;
+  font-weight:bold;
+  letter-spacing:7px;
+  text-shadow:0 0 15px #00eaff;
+}
+
+.status{
+  color:#587581;
+  font-size:10px;
+  letter-spacing:2px;
+}
+
+.status span{
+  color:#65eaff;
+}
+
+.controls{
+  position:absolute;
+  left:30px;
+  bottom:30px;
+  display:flex;
+  gap:8px;
+  pointer-events:auto;
+}
+
+button{
+  font-family:inherit;
+}
+
+.btn{
+  border:1px solid rgba(0,220,255,.3);
+  background:rgba(2,12,22,.75);
+  color:#9defff;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  backdrop-filter:blur(12px);
+  transition:.25s;
+}
+
+.btn:hover{
+  background:rgba(0,220,255,.15);
+  box-shadow:0 0 25px rgba(0,220,255,.25);
+}
+
+.elevatorBtn{
+  position:absolute;
+  right:30px;
+  bottom:30px;
+  pointer-events:auto;
+  border:1px solid rgba(0,220,255,.4);
+  background:rgba(2,12,22,.8);
+  color:#9defff;
+  padding:13px 18px;
+  border-radius:12px;
+  cursor:pointer;
+  box-shadow:0 0 20px rgba(0,220,255,.15);
+}
+
+.elevatorBtn:hover{
+  background:rgba(0,220,255,.15);
+}
+
+.hint{
+  position:absolute;
+  right:30px;
+  bottom:78px;
+  font-size:9px;
+  letter-spacing:3px;
+  color:#506c78;
+}
+
+
+/* =========================
+   INFO
+========================= */
+
+#info{
+  position:absolute;
+  right:30px;
+  top:50%;
+  width:290px;
+  padding:25px;
+  border-radius:20px;
+  border:1px solid rgba(0,220,255,.3);
+  background:rgba(3,12,22,.85);
+  backdrop-filter:blur(20px);
+  transform:translate(350px,-50%);
+  transition:.5s;
+  pointer-events:auto;
+}
+
+#info.show{
+  transform:translate(0,-50%);
+}
+
+#info h2{
+  color:#8deeff;
+  margin-bottom:12px;
+}
+
+#info p{
+  color:#92adb9;
+  line-height:1.8;
+  font-size:13px;
+}
+
+.close{
+  margin-top:15px;
+  padding:8px 15px;
+  border:0;
+  border-radius:8px;
+  background:#00d9ee;
+  color:#001017;
+  cursor:pointer;
+}
+
+
+/* =========================
+   CINEMATIC
+========================= */
+
+.cinematic .controls,
+.cinematic .top,
+.cinematic .elevatorBtn,
+.cinematic .hint{
+  opacity:0;
+}
+
+.cinematic .world{
+  animation:cinematic 12s ease-in-out infinite alternate;
+}
+
+@keyframes cinematic{
+  from{
+    transform:
+      translate(-50%,-45%)
+      rotateX(62deg)
+      translateZ(-180px);
+  }
+
+  to{
+    transform:
+      translate(-50%,-45%)
+      rotateX(57deg)
+      rotateZ(3deg)
+      translateZ(-70px)
+      scale(1.12);
+  }
+}
+
+
+/* =========================
+   NIGHT MODE
+========================= */
+
+.darkCity .window{
+  opacity:.05!important;
+}
+
+.darkCity .sign{
+  opacity:.2;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:900px){
+  #city,
+  #loading{
+    display:none!important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+
+<!-- =========================
+     LOADING
+========================= -->
+
+<div id="loading">
+
+  <div class="loadingBox">
+
+    <div class="loadingTitle">
+      NEON CITY
+    </div>
+
+    <div class="loadingSub">
+      INITIALIZING FUTURE WORLD
+    </div>
+
+    <div class="loadingBar">
+      <div class="loadingProgress"></div>
+    </div>
+
+    <div class="loadingPercent">
+      SYSTEM BOOTING...
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     MOBILE
+========================= -->
+
+<div id="mobile">
+
+  <div class="mobileBox">
+
+    <div class="mobileIcon">
+      🖥️
+    </div>
+
+    <h1>
+      PC ONLY
+    </h1>
+
+    <p>
+      เว็บไซต์นี้สร้างเป็นเมือง 3D
+      สำหรับใช้งานด้วยคอมพิวเตอร์และเมาส์
+      <br><br>
+      กรุณาเปิดด้วย PC หรือ Laptop
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     CITY
+========================= -->
+
+<div id="city">
+
+  <div class="stars"></div>
+
+  <div class="moon"></div>
+
+
+  <div class="camera" id="camera">
+
+    <div class="world">
+
+      <div class="ground"></div>
+
+      <div class="road roadH"></div>
+      <div class="road roadV"></div>
+
+
+      <!-- BUILDINGS -->
+
+      <div class="building b1" onclick="showInfo(
+        'NEON TOWER',
+        'ศูนย์กลางพลังงานของเมืองแห่งอนาคต'
+      )">
+        <div class="windows"></div>
+      </div>
+
+      <div class="building b2" onclick="showInfo(
+        'CYBER LAB',
+        'ศูนย์วิจัยหุ่นยนต์และเทคโนโลยีขั้นสูง'
+      )">
+        <div class="windows"></div>
+      </div>
+
+      <div class="building b3" onclick="showInfo(
+        'LUMINA PLAZA',
+        'ศูนย์การค้าและความบันเทิงแห่งอนาคต'
+      )">
+        <div class="windows"></div>
+      </div>
+
+      <div class="building b4" onclick="showInfo(
+        'SKY HOTEL',
+        'โรงแรมหรูพร้อมวิวเมือง 360 องศา'
+      )">
+        <div class="windows"></div>
+      </div>
+
+      <div class="building b5" onclick="showInfo(
+        'TECH DISTRICT',
+        'ศูนย์กลางนวัตกรรมของเมือง'
+      )">
+        <div class="windows"></div>
+      </div>
+
+      <div class="building b6" onclick="showInfo(
+        'MEGA CENTER',
+        'ศูนย์รวมร้านค้าและร้านอาหาร'
+      )">
+        <div class="windows"></div>
+      </div>
+
+      <div class="building b7" onclick="showInfo(
+        'DATA HUB',
+        'ศูนย์ข้อมูลกลางของ NEON CITY'
+      )">
+        <div class="windows"></div>
+      </div>
+
+      <div class="building b8" onclick="showInfo(
+        'NOVA STATION',
+        'สถานีขนส่งความเร็วสูง'
+      )">
+        <div class="windows"></div>
+      </div>
+
+
+      <!-- SIGNS -->
+
+      <div class="sign sign1">
+        NEON
+      </div>
+
+      <div class="sign sign2">
+        LUMINA
+      </div>
+
+      <div class="sign sign3">
+        2099
+      </div>
+
+
+      <!-- ELEVATOR -->
+
+      <div class="elevatorArea">
+
+        <div class="elevator" id="elevator">
+
+          <div class="floor" id="floor">
+            01
+          </div>
+
+          <div class="elevatorLight"></div>
+
+          <div class="elevatorDoor left"></div>
+          <div class="elevatorDoor right"></div>
+
+        </div>
+
+
+        <!-- ROBOT -->
+
+        <div class="robot" id="robot">
+
+          <div class="robotHead">
+            <div class="robotEye"></div>
+          </div>
+
+          <div class="robotBody"></div>
+
+          <div class="robotArm leftArm"></div>
+          <div class="robotArm rightArm"></div>
+
+          <div class="robotLeg leftLeg"></div>
+          <div class="robotLeg rightLeg"></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- FLYING CARS -->
+
+  <div class="flyingCar fly1"></div>
+  <div class="flyingCar fly2"></div>
+
+
+  <!-- EFFECTS -->
+
+  <div id="particles"></div>
+  <div id="rain"></div>
+
+
+  <!-- HUD -->
+
+  <div class="hud">
+
+    <div class="top">
+
+      <div class="logo">
+        NEON / CITY
+      </div>
+
+      <div class="status">
+        SYSTEM:
+        <span>ONLINE</span>
+        &nbsp;&nbsp;
+        TIME:
+        <span id="time">00:00:00</span>
+      </div>
+
+    </div>
+
+
+    <!-- CONTROLS -->
+
+    <div class="controls">
+
+      <button class="btn" onclick="toggleRain()">
+        🌧 RAIN
+      </button>
+
+      <button class="btn" onclick="toggleLights()">
+        💡 LIGHTS
+      </button>
+
+      <button class="btn" onclick="cinematic()">
+        🎥 CINEMATIC
+      </button>
+
+      <button class="btn" onclick="fullScreen()">
+        ⛶ FULLSCREEN
+      </button>
+
+      <button class="btn" onclick="resetCamera()">
+        ↺ RESET
+      </button>
+
+    </div>
+
+
+    <!-- ELEVATOR -->
+
+    <button
+      class="elevatorBtn"
+      onclick="callElevator()"
+    >
+      🤖 CALL ELEVATOR
+    </button>
+
+    <div class="hint">
+      MOVE YOUR MOUSE • EXPLORE THE CITY
+    </div>
+
+
+    <!-- INFO -->
+
+    <div id="info">
+
+      <h2 id="infoTitle">
+        BUILDING
+      </h2>
+
+      <p id="infoText">
+        INFORMATION
+      </p>
+
+      <button
+        class="close"
+        onclick="closeInfo()"
+      >
+        CLOSE
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   LOADING
+========================= */
+
+window.addEventListener("load",()=>{
+
+  setTimeout(()=>{
+
+    const loading =
+      document.getElementById("loading");
+
+    loading.style.opacity="0";
+
+    setTimeout(()=>{
+
+      loading.style.display="none";
+
+      document
+        .getElementById("city")
+        .classList.add("show");
+
+    },1200);
+
+  },3500);
+
+});
+
+
+/* =========================
+   WINDOWS
+========================= */
+
+document
+.querySelectorAll(".windows")
+.forEach(box=>{
+
+  for(let i=0;i<90;i++){
+
+    const w=
+      document.createElement("div");
+
+    w.className="window";
+
+    w.style.setProperty(
+      "--speed",
+      (1+Math.random()*4)+"s"
+    );
+
+    box.appendChild(w);
+
+  }
+
+});
+
+
+/* =========================
+   PARTICLES
+========================= */
+
+const particles=
+  document.getElementById("particles");
+
+for(let i=0;i<120;i++){
+
+  const p=
+    document.createElement("div");
+
+  p.className="particle";
+
+  p.style.left=
+    Math.random()*100+"%";
+
+  p.style.animationDuration=
+    (5+Math.random()*12)+"s";
+
+  p.style.animationDelay=
+    (-Math.random()*12)+"s";
+
+  particles.appendChild(p);
+
+}
+
+
+/* =========================
+   RAIN
+========================= */
+
+const rain=
+  document.getElementById("rain");
+
+for(let i=0;i<180;i++){
+
+  const d=
+    document.createElement("div");
+
+  d.className="drop";
+
+  d.style.left=
+    Math.random()*100+"%";
+
+  d.style.animationDuration=
+    (.3+Math.random()*.8)+"s";
+
+  d.style.animationDelay=
+    (-Math.random()*2)+"s";
+
+  rain.appendChild(d);
+
+}
+
+
+/* =========================
+   MOUSE CAMERA
+========================= */
+
+const camera=
+  document.getElementById("camera");
+
+let tx=0;
+let ty=0;
+
+let cx=0;
+let cy=0;
+
+document.addEventListener(
+  "mousemove",
+  e=>{
+
+    tx=
+      (e.clientX/window.innerWidth-.5)*18;
+
+    ty=
+      (e.clientY/window.innerHeight-.5)*12;
+
+  }
+);
+
+function cameraLoop(){
+
+  cx+=(tx-cx)*.06;
+  cy+=(ty-cy)*.06;
+
+  camera.style.transform=
+    `rotateY(${cx}deg)
+     rotateX(${-cy}deg)`;
+
+  requestAnimationFrame(cameraLoop);
+
+}
+
+cameraLoop();
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetCamera(){
+
+  tx=0;
+  ty=0;
+
+}
+
+
+/* =========================
+   TIME
+========================= */
+
+function updateTime(){
+
+  const d=new Date();
+
+  document
+    .getElementById("time")
+    .textContent=
+    [
+      d.getHours(),
+      d.getMinutes(),
+      d.getSeconds()
+    ]
+    .map(x=>String(x).padStart(2,"0"))
+    .join(":");
+
+}
+
+setInterval(updateTime,1000);
+
+updateTime();
+
+
+/* =========================
+   RAIN
+========================= */
+
+let raining=true;
+
+function toggleRain(){
+
+  raining=!raining;
+
+  document
+    .getElementById("rain")
+    .style.display=
+    raining?"block":"none";
+
+}
+
+
+/* =========================
+   LIGHTS
+========================= */
+
+function toggleLights(){
+
+  document
+    .getElementById("city")
+    .classList.toggle("darkCity");
+
+}
+
+
+/* =========================
+   CINEMATIC
+========================= */
+
+function cinematic(){
+
+  document
+    .getElementById("city")
+    .classList.toggle("cinematic");
+
+}
+
+
+/* =========================
+   FULLSCREEN
+========================= */
+
+function fullScreen(){
+
+  if(!document.fullscreenElement){
+
+    document.documentElement
+      .requestFullscreen()
+      .catch(()=>{});
+
+  }else{
+
+    document.exitFullscreen();
+
+  }
+
+}
+
+
+/* =========================
+   BUILDING INFO
+========================= */
+
+function showInfo(title,text){
+
+  document
+    .getElementById("infoTitle")
+    .textContent=title;
+
+  document
+    .getElementById("infoText")
+    .textContent=text;
+
+  document
+    .getElementById("info")
+    .classList.add("show");
+
+}
+
+function closeInfo(){
+
+  document
+    .getElementById("info")
+    .classList.remove("show");
+
+}
+
+
+/* =========================
+   ELEVATOR
+========================= */
+
+const elevator=
+  document.getElementById("elevator");
+
+const robot=
+  document.getElementById("robot");
+
+const floor=
+  document.getElementById("floor");
+
+let busy=false;
+
+function callElevator(){
+
+  if(busy)return;
+
+  busy=true;
+
+  robot.classList.add("walking");
+
+  /* robot approaches */
+
+  robot.style.left="-10px";
+
+  setTimeout(()=>{
+    robot.style.left="25px";
+  },700);
+
+  setTimeout(()=>{
+    robot.style.left="60px";
+  },1500);
+
+  setTimeout(()=>{
+    elevator.classList.add("open");
+  },2500);
+
+  /* robot enters */
+
+  setTimeout(()=>{
+    robot.style.left="135px";
+  },3500);
+
+  setTimeout(()=>{
+    robot.classList.remove("walking");
+  },5000);
+
+  /* close */
+
+  setTimeout(()=>{
+    elevator.classList.remove("open");
+  },5600);
+
+  /* go up */
+
+  setTimeout(()=>{
+    floor.textContent="02";
+    elevator.style.transform=
+      "translateY(-45px)";
+  },6800);
+
+  setTimeout(()=>{
+    floor.textContent="03";
+    elevator.style.transform=
+      "translateY(-90px)";
+  },7800);
+
+  setTimeout(()=>{
+    floor.textContent="04";
+    elevator.style.transform=
+      "translateY(-135px)";
+  },8800);
+
+  /* sound */
+
+  setTimeout(()=>{
+    ding();
+  },9500);
+
+  /* open */
+
+  setTimeout(()=>{
+    elevator.classList.add("open");
+  },10000);
+
+  /* robot leaves */
+
+  setTimeout(()=>{
+    robot.classList.add("walking");
+    robot.style.left="90px";
+  },11000);
+
+  setTimeout(()=>{
+    robot.style.left="45px";
+  },12000);
+
+  setTimeout(()=>{
+    robot.style.left="-10px";
+  },13000);
+
+  /* reset */
+
+  setTimeout(()=>{
+
+    robot.classList.remove("walking");
+
+    elevator.classList.remove("open");
+
+    elevator.style.transform=
+      "translateY(0)";
+
+    floor.textContent="01";
+
+    busy=false;
+
+  },14500);
+
+}
+
+
+/* =========================
+   ELEVATOR SOUND
+========================= */
+
+function ding(){
+
+  try{
+
+    const AC=
+      window.AudioContext||
+      window.webkitAudioContext;
+
+    const ctx=
+      new AC();
+
+    const osc=
+      ctx.createOscillator();
+
+    const gain=
+      ctx.createGain();
+
+    osc.frequency.value=880;
+
+    gain.gain.setValueAtTime(
+      .0001,
+      ctx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .2,
+      ctx.currentTime+.03
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .0001,
+      ctx.currentTime+.6
+    );
+
+    osc.connect(gain);
+
+    gain.connect(ctx.destination);
+
+    osc.start();
+
+    osc.stop(
+      ctx.currentTime+.6
+    );
+
+  }catch(e){}
+
+}
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+document.addEventListener(
+  "keydown",
+  e=>{
+
+    if(e.key.toLowerCase()==="e"){
+      callElevator();
+    }
+
+    if(e.key.toLowerCase()==="r"){
+      toggleRain();
+    }
+
+    if(e.key.toLowerCase()==="l"){
+      toggleLights();
+    }
+
+    if(e.key.toLowerCase()==="c"){
+      cinematic();
+    }
+
+    if(e.key.toLowerCase()==="f"){
+      fullScreen();
+    }
+
+  }
+);
+
+</script>
+
+</body>
+</html>
+```
