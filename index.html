@@ -138,7 +138,7 @@ body{background:radial-gradient(1200px 600px at 85% -10%,#cfe9df 0,transparent 6
     <h1 id="wtitle" aria-label="ยินดีต้อนรับ"></h1>
     <p>สู่ LeaveEase ระบบลางานที่รู้โควต้าก่อนกดส่ง</p>
     <button class="enter" id="enter">เข้าสู่เว็บ</button>
-    <small>มีเสียงเพลง · ปิดได้ที่ปุ่มมุมขวาล่าง</small>
+    <small>มีเสียงเพลงเบาๆ · ปิดได้ที่ปุ่มมุมขวาล่าง</small>
   </div>
 </div>
 <button class="snd hide" id="snd" aria-label="เปิดหรือปิดเสียงเพลง">🔊</button>
@@ -274,65 +274,31 @@ body{background:radial-gradient(1200px 600px at 85% -10%,#cfe9df 0,transparent 6
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-/* ===== เพลงจากไฟล์เสียง ===== */
+/* ===== เพลงเบาๆ (สร้างเสียงเองด้วย Web Audio ไม่ใช้ไฟล์เพลง) ===== */
 const Music=(()=>{
-  // ใส่ชื่อไฟล์เพลง (เช่น 'song.mp3') หรือ URL ของไฟล์เพลงที่ต้องการตรงนี้
-  const AUDIO_SRC='song.mp3';
-  const audio=new Audio(AUDIO_SRC);
-  audio.loop=true;
-  audio.preload='auto';
-  audio.volume=0.65;
-
-  let on=false,started=false;
+  let ctx,master,lp,on=false,timer,step=0,started=false;
   const b=document.getElementById('snd');
-
-  function syncBtn(){
-    b.textContent=on?'🔊':'🔇';
-  }
-
-  function set(v){
-    on=v;
-    syncBtn();
-    try{localStorage.setItem('le_snd',v?'on':'off')}catch(e){}
-    if(v){
-      audio.play().catch(()=>{});
-    }else{
-      audio.pause();
-    }
-  }
-
+  const ch=[[261.63,329.63,392,493.88],[220,261.63,329.63,392],[174.61,261.63,329.63,440],[196,293.66,392,493.88]];
+  const pe=[523.25,587.33,659.25,783.99,880,1046.5];
+  function env(f,type,t,peak,att,dur){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=f;o.detune.value=(Math.random()-.5)*12;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+att);g.gain.linearRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(lp);o.start(t);o.stop(t+dur+.1)}
+  function tick(){const t=ctx.currentTime+.05,c=ch[step++%4];c.forEach(f=>env(f,'sine',t,.045,2.5,9));env(c[0]/2,'sine',t,.06,3,9);for(let i=0;i<3;i++)env(pe[Math.random()*6|0],'triangle',t+1+i*2.5+Math.random()*.6,.03,.02,2.4);timer=setTimeout(tick,8000)}
+  function set(v){if(!ctx)return;on=v;const t=ctx.currentTime;master.gain.cancelScheduledValues(t);master.gain.setValueAtTime(master.gain.value,t);master.gain.linearRampToValueAtTime(v?.55:0,t+1);clearTimeout(timer);if(v){if(ctx.state==='suspended')ctx.resume();tick()}try{localStorage.setItem('le_snd',v?'on':'off')}catch(e){}b.textContent=v?'🔊':'🔇'}
   function start(){
-    if(started){
-      if(on)audio.play().catch(()=>{});
-      return;
-    }
-    started=true;
-    b.classList.remove('hide');
-    let pref=null;
-    try{pref=localStorage.getItem('le_snd')}catch(e){}
-    if(pref==='off'){
-      on=false;
-      syncBtn();
-      return;
-    }
-    on=true;
-    syncBtn();
-    audio.play().catch(()=>{
-      on=false;
-      syncBtn();
-    });
+    if(started)return;started=true;
+    try{
+      const A=window.AudioContext||window.webkitAudioContext;ctx=new A();master=ctx.createGain();master.gain.value=0;
+      lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1400;
+      const dl=ctx.createDelay(1),fb=ctx.createGain(),wet=ctx.createGain();dl.delayTime.value=.38;fb.gain.value=.38;wet.gain.value=.5;
+      lp.connect(master);lp.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(master);master.connect(ctx.destination);
+      master.gain.linearRampToValueAtTime(.55,ctx.currentTime+3);on=true;tick();
+      b.classList.remove('hide');b.textContent='🔊';
+      let pref=null;try{pref=localStorage.getItem('le_snd')}catch(e){}
+      if(pref==='off')set(false);
+    }catch(e){started=false}
   }
-
   b.onclick=()=>set(!on);
-  document.addEventListener('visibilitychange',()=>{
-    if(document.hidden){
-      audio.pause();
-    }else if(on){
-      audio.play().catch(()=>{});
-    }
-  });
-
-  return{start,set};
+  document.addEventListener('visibilitychange',()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)ctx.resume()});
+  return{start};
 })();
 
 /* ===== ฉาก 3D: ตั๋ววันลา 1 ใบ = 1 วัน ===== */
@@ -404,6 +370,7 @@ const Music=(()=>{
 const QUOTA=5, RATE=350;
 const $=id=>document.getElementById(id);
 let token=null, D=null;
+// วาง URL ของ Web app ที่ได้จาก Apps Script (ลงท้ายด้วย /exec) ตรงนี้
 const API_URL='https://script.google.com/macros/s/AKfycbwaH6W1-hcSSqspKtFf7S6WF8NfJjzVEbgWIQtHg_XaDiYCWUrN0c4DqQqgGkMMLjqI1g/exec';
 const call=(fn,...a)=>{
   if(API_URL.indexOf('https://')!==0)return Promise.reject(new Error('ยังไม่ได้ตั้งค่า API_URL ในไฟล์ index.html'));
@@ -511,7 +478,110 @@ function renderAdmin(){
   });
   const lb=$('alist');lb.innerHTML='';
   if(!AD.leaves.length)lb.innerHTML='<div class="empty">ไม่มีใบลาในเดือนนี้</div>';
+  AD.leaves.forEach(l=>{
+    const it=document.createElement('div');it.className='it';
+    const L=document.createElement('div');const t=document.createElement('div');t.className='t';t.textContent=l.name+' · '+l.type+' · '+l.daysM+' วัน';
+    const d=document.createElement('div');d.className='d';d.textContent=fmt(l.from)+(l.to!==l.from?' – '+fmt(l.to):'')+(l.why?' · '+l.why:'');L.append(t,d);
+    const R=document.createElement('div');R.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end';
+    R.append(tag(l.status,l.status==='อนุมัติ'?'tg':'tw'));
+    if(l.extraM)R.append(tag('หัก '+(l.extraM*RATE).toLocaleString('th-TH')+' บาท','tw'));
+    [['อนุมัติ','อนุมัติ'],['ไม่อนุมัติ','ปฏิเสธ']].forEach(([st,lab])=>{if(l.status!==st){const b=document.createElement('button');b.className='btn ghost';b.style.padding='5px 10px';b.style.fontSize='13px';b.textContent=lab;b.onclick=()=>setSt(l.id,st);R.append(b)}});
+    it.append(L,R);lb.append(it);
+  });
 }
+async function setSt(id,st){try{AD=await call('setStatus',token,id,st,$('amonth').value);renderAdmin()}catch(e){$('asum').textContent=msg(e)}}
+$('toadm').onclick=()=>{$('admbox').classList.toggle('hide');$('acode').focus()};
+$('ago').onclick=async()=>{
+  const c=$('acode').value.trim();
+  if(!c){$('aerr').textContent='กรุณากรอกรหัสผู้ดูแล';return}
+  $('ago').disabled=true;$('aerr').textContent='';
+  try{token=await call('adminLogin',c);setTok(token);$('acode').value='';show(true);showAdmin(true);await loadAdmin()}
+  catch(e){$('aerr').textContent=msg(e)}
+  $('ago').disabled=false;
+};
+$('aout').onclick=()=>logout();
+$('amonth').addEventListener('change',loadAdmin);
+
+/* ===== ฟังก์ชันเสริม ===== */
+let flt='ทั้งหมด',cm=new Date();cm.setDate(1);
+const pad=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+function dayMap(){
+  const map={},cnt={};
+  [...D.leaves].sort((a,b)=>a.from<b.from?-1:1).forEach(l=>{
+    const d=new Date(l.from+'T00:00:00'),e=new Date(l.to+'T00:00:00');
+    for(;d<=e;d.setDate(d.getDate()+1)){
+      const w=d.getDay();if(w===0||w===6)continue;
+      const k=ymd(d),m=k.slice(0,7);
+      if(l.status==='ไม่อนุมัติ'){map[k]='rej';continue}
+      cnt[m]=(cnt[m]||0)+1;
+      map[k]=cnt[m]>QUOTA?'over':l.status==='อนุมัติ'?'ok':'pend';
+    }
+  });
+  return map;
+}
+function renderCal(){
+  const map=dayMap(),y=cm.getFullYear(),m=cm.getMonth(),box=$('cal');box.innerHTML='';
+  $('cmonth').textContent=cm.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+  ['อา','จ','อ','พ','พฤ','ศ','ส'].forEach(n=>{const x=document.createElement('div');x.className='dh';x.textContent=n;box.append(x)});
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),today=ymd(new Date());
+  for(let i=0;i<first;i++)box.append(document.createElement('div'));
+  for(let d=1;d<=days;d++){
+    const k=y+'-'+pad(m+1)+'-'+pad(d),w=new Date(y,m,d).getDay(),c=document.createElement('button');
+    c.className='dc'+(w===0||w===6?' we':'')+(map[k]?' '+map[k]:'')+(k===today?' today':'');c.textContent=d;
+    if(w>0&&w<6)c.onclick=()=>pickDay(k);else c.disabled=true;
+    box.append(c);
+  }
+}
+function pickDay(k){
+  const f=$('from'),t=$('to');
+  if(!f.value||k<f.value||f.value!==t.value){f.value=k;t.value=k}else t.value=k;
+  updatePrev();
+}
+function renderBars(){
+  const box=$('bars');box.innerHTML='';const now=new Date();let yr=0;
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1),k=d.getFullYear()+'-'+pad(d.getMonth()+1),n=D.counts[k]||0;
+    const col=document.createElement('div');col.className='bc';
+    const v=document.createElement('b');v.textContent=n;
+    const bar=document.createElement('div');bar.className='bar'+(n>QUOTA?' over':'');bar.style.height=Math.round(Math.min(8,n)/8*110)+'px';
+    const l=document.createElement('span');l.textContent=d.toLocaleDateString('th-TH',{month:'short'});
+    col.append(v,bar,l);box.append(col);
+  }
+  Object.keys(D.counts).filter(k=>k.slice(0,4)===String(now.getFullYear())).forEach(k=>yr+=Math.max(0,D.counts[k]-QUOTA)*RATE);
+  $('yearnote').textContent='เส้นประ = โควต้า 5 วัน · ปีนี้ถูกหักเงินรวม '+yr.toLocaleString('th-TH')+' บาท';
+}
+function renderChips(){
+  const box=$('chips');box.innerHTML='';
+  ['ทั้งหมด','รออนุมัติ','อนุมัติ','ไม่อนุมัติ'].forEach(s=>{const b=document.createElement('button');b.className='chip'+(flt===s?' on':'');b.textContent=s;b.onclick=()=>{flt=s;render()};box.append(b)});
+}
+function renderExtras(){renderChips();renderCal();renderBars()}
+function renderNear(S){
+  const box=$('anear');box.innerHTML='';const N=S.filter(x=>x.used>=4);
+  if(!N.length){box.innerHTML='<div class="empty">ยังไม่มีใครใกล้เต็มโควต้า</div>';return}
+  N.forEach(x=>{
+    const it=document.createElement('div');it.className='it';
+    const L=document.createElement('div');const t=document.createElement('div');t.className='t';t.textContent=x.name;
+    const d=document.createElement('div');d.className='d';d.textContent=x.emp+' · ใช้ '+x.used+' วัน';L.append(t,d);
+    it.append(L,tag(x.used>QUOTA?'เกินโควต้า '+x.extra+' วัน':'เหลือ '+(QUOTA-x.used)+' วัน',x.used>QUOTA?'tw':'tg'));box.append(it);
+  });
+}
+function dl(name,rows){
+  const csv='\ufeff'+rows.map(r=>r.map(v=>{v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+$('csv').onclick=()=>D&&dl('ประวัติการลา.csv',[['ประเภท','ตั้งแต่','ถึง','จำนวนวัน','เหตุผล','สถานะ','หักเงิน (บาท)']].concat(D.leaves.map(l=>[l.type,l.from,l.to,l.days,l.why,l.status,l.extra*RATE])));
+$('acsv').onclick=()=>AD&&dl('สรุปการลา_'+AD.month+'.csv',[['รหัส','ชื่อ','วันลา','เกินโควต้า','หักเงิน (บาท)']].concat(AD.summary.map(x=>[x.emp,x.name,x.used,x.extra,x.money])));
+$('cprev').onclick=()=>{cm.setMonth(cm.getMonth()-1);renderCal()};
+$('cnext').onclick=()=>{cm.setMonth(cm.getMonth()+1);renderCal()};
+async function msgAct(id,fn,ok,clear){
+  const e=$(id);e.style.color='var(--rd)';e.textContent='';
+  try{await fn();clear.forEach(i=>$(i).value='');e.style.color='var(--g)';e.textContent=ok}catch(x){e.textContent=msg(x)}
+}
+$('pwbtn').onclick=()=>msgAct('perr',()=>call('changePassword',token,$('op').value,$('np').value),'เปลี่ยนรหัสผ่านแล้ว',['op','np']);
+$('nadd').onclick=()=>msgAct('nerr',()=>call('addEmployee',token,$('ncode').value,$('nname').value,$('npw').value),'เพิ่มพนักงานแล้ว',['ncode','nname','npw']);
+
+(async()=>{const t=getTok();if(!t)return;token=t;try{D=await call('getData',t);if(D.admin){show(true);showAdmin(true);loadAdmin()}else enter()}catch(e){logout()}})();
 </script>
+
 </body>
   </html>
